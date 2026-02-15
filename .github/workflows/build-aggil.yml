@@ -16,31 +16,26 @@ jobs:
       - name: Instalar Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Personalizar Branding e Configurações
+      - name: Personalizar Branding e Interface
         shell: bash
         run: |
-          # 1. Identidade e Servidor - Usando substituição exata para evitar quebra de sintaxe
-          sed -i 's/const REND_BASE: &str = "RustDesk";/const REND_BASE: &str = "AggilRemote";/' libs/hbb_common/src/config.rs
-          sed -i 's/Purslane Ltd/DJ Info PE Tecnologia/g' libs/hbb_common/src/config.rs
+          # 1. Alterar o Nome da Janela e do Serviço
+          # Usamos uma abordagem menos agressiva para não quebrar as aspas do Rust
+          sed -i 's/"RustDesk"/"AggilRemote"/g' libs/hbb_common/src/config.rs
           
-          # 2. Servidor e Chave (Substituindo os valores padrão do RustDesk)
-          sed -i 's/rs-ny.rustdesk.com/remote.djinfope.com.br/g' libs/hbb_common/src/config.rs
-          sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.MY_KEY }}|g" libs/hbb_common/src/config.rs
-          
-          # 3. Forçar Configurações de Interface (Habilitando recursos solicitados)
-          sed -i 's/direct_ip_access = false/direct_ip_access = true/g' libs/hbb_common/src/config.rs
-          sed -i 's/display_offline_addressbook = false/display_offline_addressbook = true/g' libs/hbb_common/src/config.rs
-          
-          # 4. Habilitar Instalação (Removendo o bloqueio do RustDesk)
+          # 2. Habilitar a Instalação (Isso é essencial para rodar como serviço)
           sed -i 's/const DISABLE_INSTALL: bool = true/const DISABLE_INSTALL: bool = false/g' libs/hbb_common/src/config.rs
           
-          # 5. Aplicar Imagens
-          cp branding/icon.ico res/icon.ico
-          cp branding/icon.ico res/tray-icon.ico
-          cp branding/logo.png res/logo.png
-          cp branding/privacy.png res/privacy.png
+          # 3. Habilitar Acesso por IP Direto
+          sed -i 's/direct_ip_access = false/direct_ip_access = true/g' libs/hbb_common/src/config.rs
 
-      - name: Instalar Dependências
+          # 4. Substituir Ícones e Logos (Onde o branding realmente aparece)
+          # Garantindo que os arquivos existam antes de copiar
+          [ -f branding/icon.ico ] && cp branding/icon.ico res/icon.ico
+          [ -f branding/icon.ico ] && cp branding/icon.ico res/tray-icon.ico
+          [ -f branding/logo.png ] && cp branding/logo.png res/logo.png
+
+      - name: Instalar Dependências (vcpkg)
         run: |
           vcpkg install --triplet x64-windows-static --vcpkg-root "C:\vcpkg" --classic libvpx libyuv opus aom dav1d
 
@@ -48,10 +43,10 @@ jobs:
         shell: pwsh
         run: |
           $env:VCPKG_ROOT = "C:\vcpkg"
-          # Build sem carregar configurações de versões anteriores
+          # Compilação limpa
           cargo build --release
           if (Test-Path "target/release/rustdesk.exe") {
-              Move-Item -Path "target/release/rustdesk.exe" -Destination "target/release/AggilRemote.exe" -Force
+              Copy-Item -Path "target/release/rustdesk.exe" -Destination "target/release/AggilRemote.exe"
           }
 
       - name: Gerar Artefato para Download
