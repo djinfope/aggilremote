@@ -50,9 +50,9 @@ jobs:
           cp branding/logo.png res/logo.png
           cp branding/privacy.png res/privacy.png
 
-      - name: Instalar Dependências (Correção Opus)
+      - name: Instalar Dependências (Video e Audio)
         run: |
-          vcpkg install --triplet x64-windows-static --vcpkg-root "C:\vcpkg" --classic libvpx libyuv opus
+          vcpkg install --triplet x64-windows-static --vcpkg-root "C:\vcpkg" --classic libvpx libyuv opus libaom dav1d
 
       - name: Compilar Executável (.exe)
         shell: pwsh
