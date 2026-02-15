@@ -1,7 +1,7 @@
 name: Build AggilRemote Pro Custom
 
 on:
-  workflow_dispatch: # Disparo manual na aba Actions
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,10 +16,6 @@ jobs:
       - name: Instalar Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Instalar Dependências VCPKG
-        run: |
-          vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static
-
       - name: Personalizar Branding, Interface e Permissões
         shell: bash
         run: |
@@ -33,30 +29,22 @@ jobs:
           sed -i 's|https://rustdesk.com|https://www.djinfope.com.br|g' libs/hbb_common/src/config.rs
           sed -i 's|https://rustdesk.com/download|https://www.djinfope.com.br/atualizacao/AggilRemote.exe|g' libs/hbb_common/src/config.rs
           
-          # 3. Recursos de Interface e Acessibilidade
-          # Ativa o Direct IP Access (Acesso Direto por IP)
+          # 3. Recursos de Interface e Acessibilidade (Solicitados)
           sed -i 's/direct_ip_access = false/direct_ip_access = true/g' libs/hbb_common/src/config.rs
-          
-          # Exibe o "X" para dispositivos offline no Address Book
           sed -i 's/display_offline_addressbook = false/display_offline_addressbook = true/g' libs/hbb_common/src/config.rs
-          
-          # Adiciona botão de ciclo de monitores na Toolbar
           sed -i 's/toolbar_monitor_switch = false/toolbar_monitor_switch = true/g' libs/hbb_common/src/config.rs
           
-          # 4. Comportamento e Instalação (Instalação ATIVA agora)
+          # 4. Comportamento e Instalação (Instalação Habilitada)
           sed -i 's/remove_wallpaper = false/remove_wallpaper = true/g' libs/hbb_common/src/config.rs
           sed -i 's/const DISABLE_INSTALL: bool = true/const DISABLE_INSTALL: bool = false/g' libs/hbb_common/src/config.rs
           
           # 5. Segurança e Acesso Bidirecional
-          # Trava as configurações para o usuário final (como no seu print)
           sed -i 's/can_change_settings = true/can_change_settings = false/g' libs/hbb_common/src/config.rs
           sed -i 's/const CAN_HIDE_SCREEN: bool = false/const CAN_HIDE_SCREEN: bool = true/g' libs/hbb_common/src/config.rs
-          
-          # Garante funcionamento Bidirecional
           sed -i 's/const ONLY_OUTGOING: bool = true/const ONLY_OUTGOING: bool = false/g' libs/hbb_common/src/config.rs
           sed -i 's/const ONLY_INCOMING: bool = true/const ONLY_INCOMING: bool = false/g' libs/hbb_common/src/config.rs
 
-          # 6. Aplicar Branding Visual (Imagens da sua pasta branding)
+          # 6. Aplicar Branding Visual (Arquivos da sua subpasta branding)
           cp branding/icon.ico res/icon.ico
           cp branding/icon.ico res/tray-icon.ico
           cp branding/logo.png res/logo.png
@@ -64,6 +52,8 @@ jobs:
 
       - name: Compilar Executável (.exe)
         run: |
+          # O cargo build gerencia o vcpkg automaticamente via vcpkg.json
+          $env:VCPKG_ROOT = "C:\vcpkg"
           cargo build --release
 
       - name: Gerar Artefato para Download
