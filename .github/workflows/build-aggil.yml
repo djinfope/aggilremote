@@ -29,12 +29,12 @@ jobs:
           sed -i 's|https://rustdesk.com|https://www.djinfope.com.br|g' libs/hbb_common/src/config.rs
           sed -i 's|https://rustdesk.com/download|https://www.djinfope.com.br/atualizacao/AggilRemote.exe|g' libs/hbb_common/src/config.rs
           
-          # 3. Recursos de Interface e Acessibilidade (Solicitados)
+          # 3. Recursos de Interface
           sed -i 's/direct_ip_access = false/direct_ip_access = true/g' libs/hbb_common/src/config.rs
           sed -i 's/display_offline_addressbook = false/display_offline_addressbook = true/g' libs/hbb_common/src/config.rs
           sed -i 's/toolbar_monitor_switch = false/toolbar_monitor_switch = true/g' libs/hbb_common/src/config.rs
           
-          # 4. Comportamento e Instalação (Instalação Habilitada)
+          # 4. Comportamento e Instalação
           sed -i 's/remove_wallpaper = false/remove_wallpaper = true/g' libs/hbb_common/src/config.rs
           sed -i 's/const DISABLE_INSTALL: bool = true/const DISABLE_INSTALL: bool = false/g' libs/hbb_common/src/config.rs
           
@@ -44,15 +44,19 @@ jobs:
           sed -i 's/const ONLY_OUTGOING: bool = true/const ONLY_OUTGOING: bool = false/g' libs/hbb_common/src/config.rs
           sed -i 's/const ONLY_INCOMING: bool = true/const ONLY_INCOMING: bool = false/g' libs/hbb_common/src/config.rs
 
-          # 6. Aplicar Branding Visual (Arquivos da sua subpasta branding)
+          # 6. Aplicar Branding Visual
           cp branding/icon.ico res/icon.ico
           cp branding/icon.ico res/tray-icon.ico
           cp branding/logo.png res/logo.png
           cp branding/privacy.png res/privacy.png
 
-      - name: Compilar Executável (.exe)
+      - name: Instalar Dependências (Correção Opus)
         run: |
-          # O cargo build gerencia o vcpkg automaticamente via vcpkg.json
+          vcpkg install --triplet x64-windows-static --vcpkg-root "C:\vcpkg" --classic libvpx libyuv opus
+
+      - name: Compilar Executável (.exe)
+        shell: pwsh
+        run: |
           $env:VCPKG_ROOT = "C:\vcpkg"
           cargo build --release
 
