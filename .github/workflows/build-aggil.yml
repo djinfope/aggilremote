@@ -1,0 +1,55 @@
+name: Build AggilRemote Pro Custom
+
+on:
+  workflow_dispatch: # Permite disparar manualmente na aba Actions
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout Código (Recursive para Submódulos)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Instalar Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Instalar Dependências VCPKG
+        run: |
+          vcpkg install libvpx:x64-windows-static libyuv:x64-windows-static opus:x64-windows-static
+
+      - name: Personalizar Código (Simulando Gerador Pro)
+        shell: bash
+        run: |
+          # 1. Identidade e Copyright
+          sed -i 's/RustDesk/AggilRemote/g' libs/hbb_common/src/config.rs
+          sed -i 's/Purslane Ltd/DJ Info PE Tecnologia/g' libs/hbb_common/src/config.rs
+          
+          # 2. Configurações de Servidor (Hardcoded)
+          sed -i "s/rs-ny.rustdesk.com/remote.djinfope.com.br/g" libs/hbb_common/src/config.rs
+          sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.MY_KEY }}|g" libs/hbb_common/src/config.rs
+          
+          # 3. Links de Suporte e Atualização (Conforme seu print)
+          sed -i 's|https://rustdesk.com|https://www.djinfope.com.br|g' libs/hbb_common/src/config.rs
+          sed -i 's|https://rustdesk.com/download|https://www.djinfope.com.br/atualizacao/AggilRemote.exe|g' libs/hbb_common/src/config.rs
+          
+          # 4. Travar Configurações (Disable Settings = Yes)
+          # Procura a variável que permite mudar servidor e trava em false
+          sed -i 's/can_change_settings = true/can_change_settings = false/g' libs/hbb_common/src/config.rs
+          
+          # 5. Aplicar Branding Visual (Ícones e Logo)
+          cp branding/icon.ico res/icon.ico
+          cp branding/icon.ico res/tray-icon.ico
+          cp branding/logo.png res/logo.png
+
+      - name: Compilar Executável (Release)
+        run: |
+          cargo build --release
+
+      - name: Gerar Artefato para Download
+        uses: actions/upload-artifact@v4
+        with:
+          name: AggilRemote
+          path: target/release/rustdesk.exe
