@@ -16,52 +16,46 @@ jobs:
       - name: Instalar Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Personalizar Branding, Interface e Permissões
+      - name: Personalizar Branding e Configurações
         shell: bash
         run: |
-          # 1. Identidade, Copyright e Servidor
+          # 1. Identidade e Servidor (Usando aspas simples para evitar erros de shell)
           sed -i 's/RustDesk/AggilRemote/g' libs/hbb_common/src/config.rs
           sed -i 's/Purslane Ltd/DJ Info PE Tecnologia/g' libs/hbb_common/src/config.rs
           sed -i "s/rs-ny.rustdesk.com/remote.djinfope.com.br/g" libs/hbb_common/src/config.rs
           sed -i "s|OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=|${{ secrets.MY_KEY }}|g" libs/hbb_common/src/config.rs
           
-          # 2. Links de Suporte e Atualização
+          # 2. Links
           sed -i 's|https://rustdesk.com|https://www.djinfope.com.br|g' libs/hbb_common/src/config.rs
-          sed -i 's|https://rustdesk.com/download|https://www.djinfope.com.br/atualizacao/AggilRemote.exe|g' libs/hbb_common/src/config.rs
           
-          # 3. Recursos de Interface
+          # 3. Interface e Permissões (Ativando o que você pediu)
           sed -i 's/direct_ip_access = false/direct_ip_access = true/g' libs/hbb_common/src/config.rs
           sed -i 's/display_offline_addressbook = false/display_offline_addressbook = true/g' libs/hbb_common/src/config.rs
-          sed -i 's/toolbar_monitor_switch = false/toolbar_monitor_switch = true/g' libs/hbb_common/src/config.rs
           
-          # 4. Comportamento e Instalação
+          # 4. Comportamento (Instalação e Wallpaper)
           sed -i 's/remove_wallpaper = false/remove_wallpaper = true/g' libs/hbb_common/src/config.rs
           sed -i 's/const DISABLE_INSTALL: bool = true/const DISABLE_INSTALL: bool = false/g' libs/hbb_common/src/config.rs
-          
-          # 5. Segurança e Acesso Bidirecional
-          sed -i 's/can_change_settings = true/can_change_settings = false/g' libs/hbb_common/src/config.rs
-          sed -i 's/const CAN_HIDE_SCREEN: bool = false/const CAN_HIDE_SCREEN: bool = true/g' libs/hbb_common/src/config.rs
-          sed -i 's/const ONLY_OUTGOING: bool = true/const ONLY_OUTGOING: bool = false/g' libs/hbb_common/src/config.rs
-          sed -i 's/const ONLY_INCOMING: bool = true/const ONLY_INCOMING: bool = false/g' libs/hbb_common/src/config.rs
 
-          # 6. Aplicar Branding Visual
+          # 5. Aplicar Imagens
           cp branding/icon.ico res/icon.ico
           cp branding/icon.ico res/tray-icon.ico
           cp branding/logo.png res/logo.png
           cp branding/privacy.png res/privacy.png
 
-      - name: Instalar Dependências (Video e Audio)
+      - name: Instalar Dependências
         run: |
           vcpkg install --triplet x64-windows-static --vcpkg-root "C:\vcpkg" --classic libvpx libyuv opus aom dav1d
 
-      - name: Compilar Executável (.exe)
+      - name: Compilar Executável
         shell: pwsh
         run: |
           $env:VCPKG_ROOT = "C:\vcpkg"
           cargo build --release
+          # Renomeia o executável para o seu nome personalizado
+          Rename-Item -Path "target/release/rustdesk.exe" -NewName "AggilRemote.exe"
 
       - name: Gerar Artefato para Download
         uses: actions/upload-artifact@v4
         with:
-          name: AggilRemote
-          path: target/release/rustdesk.exe
+          name: AggilRemote-Windows-Final
+          path: target/release/AggilRemote.exe
